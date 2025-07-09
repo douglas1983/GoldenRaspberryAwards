@@ -171,5 +171,4 @@ src/
 ```
 
 ---
-
 ## 🧑‍💻 Desenvolvido para avaliação técnica.
