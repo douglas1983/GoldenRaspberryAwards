@@ -1,0 +1,27 @@
+{
+  "name": "raspberry-api",
+  "version": "1.0.0",
+  "description": "Golden Raspberry Awards API",
+  "main": "src/server.ts",
+  "scripts": {
+    "start": "ts-node src/server.ts",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "better-sqlite3": "^8.4.0",
+    "csv-parser": "^3.0.0",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.3.1",
+    "@types/supertest": "^2.0.12",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  }
+}
