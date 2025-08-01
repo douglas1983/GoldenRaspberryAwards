@@ -3,26 +3,38 @@ import path from "path";
 import csv from "csv-parser";
 import { getDb } from "../database/sqliteConnection";
 
-export const loadCsv = async () => {
+export const loadCsv = async (): Promise<void> => {
+  const db = await getDb(); // db aqui já é da lib sqlite com Promise
+
+  const filePath = path.join(__dirname, "../../../Movielist.csv");
+
   return new Promise<void>((resolve, reject) => {
-    const db = getDb();
-    const stmt = db.prepare(
-      "INSERT INTO awards (year, title, studios, producers, winner) VALUES (?, ?, ?, ?, ?)"
-    );
-    const filePath = path.join(__dirname, "../../../Movielist.csv");
+    const rows: any[] = [];
 
     fs.createReadStream(filePath)
-      .pipe(csv({separator: ";"}))
+      .pipe(csv({ separator: ";" }))
       .on("data", (row) => {
-        stmt.run([
+        rows.push([
           parseInt(row.year),
           row.title,
           row.studios,
           row.producers,
-          row.winner === 'yes' ? 1 : 0
+          row.winner === "yes" ? 1 : 0,
         ]);
       })
-      .on("end", () => resolve())
+      .on("end", async () => {
+        try {
+          for (const params of rows) {
+            await db.run(
+              "INSERT INTO awards (year, title, studios, producers, winner) VALUES (?, ?, ?, ?, ?)",
+              params
+            );
+          }
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      })
       .on("error", (err) => reject(err));
   });
 };

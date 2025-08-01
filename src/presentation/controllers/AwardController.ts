@@ -11,7 +11,7 @@ export class AwardController {
   static async getIntervals(req: Request, res: Response) {
     const repository = new AwardRepository();
     const usecase = new GetAwardIntervalsUseCase(repository);
-    const result = usecase.execute();
+    const result = await usecase.execute();
     res.json(result);
   }
   static async getAll(req: Request, res: Response) {
@@ -21,7 +21,7 @@ export class AwardController {
     const studio = req.query.studio?.toString();
   
     const usecase = new GetAllAwardsUseCase(repository);
-    const result = usecase.execute({ year, winner, studio });
+    const result = await usecase.execute({ year, winner, studio });
     res.json(result);
   }
 
@@ -29,7 +29,7 @@ export class AwardController {
     const repository = new AwardRepository();
     const id = Number(req.params.id);
     const usecase = new GetAwardByIdUseCase(repository);
-    const award = usecase.execute(id);
+    const award = await usecase.execute(id);
     if (!award) {
       return res.status(404).json({ error: 'Award not found' });
     }
@@ -43,7 +43,7 @@ export class AwardController {
       return res.status(400).json({ error: 'Invalid award data' });
     }
     const usecase = new InsertAwardUseCase(repository);
-    const result = usecase.execute(award);
+    const result = await usecase.execute(award);
     res.status(201).json(result);
   }
 
@@ -56,7 +56,7 @@ export class AwardController {
     }
     const usecase = new UpdateAwardUseCase(repository);
     try {
-      const result = usecase.execute(id, awardData);
+      const result = await usecase.execute(id, awardData);
       res.status(200).json(result);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -69,7 +69,7 @@ export class AwardController {
     const id = Number(req.params.id);
     const usecase = new DeleteAwardUseCase(repository);
     try {
-      usecase.execute(id);
+      await usecase.execute(id);
       res.status(204).send();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

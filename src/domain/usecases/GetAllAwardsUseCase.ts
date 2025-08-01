@@ -10,9 +10,9 @@ interface params {
 export class GetAllAwardsUseCase {
   constructor(private repository: AwardRepository) {}
 
-  execute(params: params): Award[]{
+  async execute(params: params): Promise<Award[]>{
     const { year, winner, studio } = params;
-    return this.repository.findAllFiltered({ year, winner, studio });
+    return await this.repository.findAllFiltered({ year, winner, studio });
 
   }
 }

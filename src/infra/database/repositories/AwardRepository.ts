@@ -1,12 +1,22 @@
-import { getDb } from '../sqliteConnection';
+
+import { setupDatabase, getDb } from '../sqliteConnection';
 import { Award } from '../../../domain/entities/Award';
 
+
 export class AwardRepository {
-  findWinners(): Award[] {
-    const db = getDb();
-    return db.prepare('SELECT * FROM awards WHERE winner = 1').all() as Award[];
+  constructor() {
+    setupDatabase().catch((error) => {
+      console.error('Error setting up database:', error);
+    });
   }
-  findAllFiltered(params: { year?: number; winner?: boolean; studio?: string }): Award[] {
+  async findWinners(): Promise<Award[]> {
+    
+    const db = getDb();
+    const winners = await db.all('SELECT * FROM awards WHERE winner = 1');
+
+    return winners;
+  }
+  async findAllFiltered(params: { year?: number; winner?: boolean; studio?: string }): Promise<Award[]> {
     const db = getDb();
     let query = 'SELECT * FROM awards WHERE 1=1';
     const values: any[] = [];
@@ -25,54 +35,59 @@ export class AwardRepository {
       query += ' AND studios LIKE ?';
       values.push(`%${params.studio}%`);
     }
-  
-    const results = db.prepare(query).all(...values) as Award[];
-    return results
+
+    const results = await db.all(query, values) as unknown as Award[];
+    const convertWinnerToBool= results
       .map((result) => this.convertWinnerToBool(result))
 
+    return convertWinnerToBool;
+
   }
-  findById(id: number): Award | undefined {
+  async findById(id: number): Promise<Award | undefined> {
     const db = getDb();
-    const result = db.prepare('SELECT * FROM awards WHERE id = ?').get(id) as Award | undefined;
+    const result = await db.get('SELECT * FROM awards WHERE id = ?', id) as unknown as Award | undefined;
     if (result) {
       return this.convertWinnerToBool(result);
     }
     return result;
   }
-
-  insert(award: Award): Award {
+  async insert(award: Award): Promise<Award> {
     const db = getDb();
-    const stmt = db.prepare(`
-      INSERT INTO awards (year, title, studios, producers, winner)
-      VALUES (?, ?, ?, ?, ?)
-    `);
-    
-    const result = stmt.run(
-      award.year,
-      award.title,
-      award.studios,
-      award.producers,
-      award.winner ? 1 : 0
+
+    const result = await db.run(
+      `INSERT INTO awards (year, title, studios, producers, winner)
+      VALUES (?, ?, ?, ?, ?)`,
+      [
+        award.year,
+        award.title,
+        award.studios,
+        award.producers,
+        award.winner ? 1 : 0
+      ]
     );
-    
-    // Recupera o ID inserido
-    const id = Number(result.lastInsertRowid);
+
+    if (!result.lastID) {
+      throw new Error('Failed to insert award');
+    }
+
+    const id =  result.lastID;
     
     // Agora busca o Award completo
-    const insertedAward = this.findById(id);
+    const insertedAward = await this.findById(id);
     if (!insertedAward) {
       throw new Error('Failed to insert award');
     }
     return insertedAward;
   }
 
-  update(id: number, award: Award): Award  {
+  async update(id: number, award: Award): Promise<Award>  {
     const db = getDb();
-    db.prepare(
-      'UPDATE awards SET year = ?, title = ?, studios = ?, producers = ?, winner = ? WHERE id = ?'
-    ).run(award.year, award.title, award.studios, award.producers, award.winner ? 1 : 0, id);
-            
-    const updatedAward = this.findById(id);
+    db.run(
+      'UPDATE awards SET year = ?, title = ?, studios = ?, producers = ?, winner = ? WHERE id = ?',
+      [award.year, award.title, award.studios, award.producers, award.winner ? 1 : 0, id]
+    );
+
+    const updatedAward = await this.findById(id);
     if (!updatedAward) {
       throw new Error('Failed to update award');
     }
@@ -82,8 +97,8 @@ export class AwardRepository {
 
   delete(id: number): void {
     const db = getDb();
-    db.prepare('DELETE FROM awards WHERE id = ?').run(id);
-  } 
+    db.run('DELETE FROM awards WHERE id = ?', id);
+  }
 
   private convertWinnerToBool(result: Award): Award {
     return {

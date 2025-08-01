@@ -10,8 +10,9 @@ interface Interval {
 export class GetAwardIntervalsUseCase {
   constructor(private repository: AwardRepository) {}
 
-  execute(): { min: Interval[]; max: Interval[] } {
-    const winners = this.repository.findWinners();
+  async execute(): Promise<{ min: Interval[]; max: Interval[] }> {
+    const winners = await this.repository.findWinners();
+ 
     const producerWins: Record<string, number[]> = {};
 
     winners.forEach((award) => {
@@ -25,7 +26,6 @@ export class GetAwardIntervalsUseCase {
         producerWins[producer].push(award.year);
       });
     });
-
 
     const intervals: Interval[] = [];
 
@@ -49,5 +49,6 @@ export class GetAwardIntervalsUseCase {
       min: intervals.filter(i => i.interval === minInterval),
       max: intervals.filter(i => i.interval === maxInterval),
     };
+
   }
 }

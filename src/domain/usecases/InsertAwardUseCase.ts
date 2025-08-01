@@ -5,7 +5,7 @@ import { Award } from '../entities/Award';
 export class InsertAwardUseCase {
   constructor(private repository: AwardRepository) {}
 
-  execute(award: Award): Award {
-    return this.repository.insert(award);
+  async execute(award: Award): Promise<Award> {
+    return await this.repository.insert(award);
   }
 }

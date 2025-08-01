@@ -10,7 +10,7 @@ interface params {
 export class GetAwardByIdUseCase {
   constructor(private repository: AwardRepository) {}
 
-  execute(id: number): Award | undefined {
-    return this.repository.findById(id);
+  async execute(id: number): Promise<Award | undefined> {
+    return  this.repository.findById(id);
   }
 }
